@@ -1,4 +1,4 @@
-# SENG265-Software-Development-Methods
+# CSC230-Intro to computer architecture
 UVIC CSC 230 2024
 
 The following are projects from CSC 230
