@@ -1,75 +1,127 @@
-# SENG265-Software-Development-Methods
-UVIC SENG 265 2023
+# SENG 265 — Software Development Methods
 
-The following are projects from SENG 265
+UVIC SENG 265, 2023. Four assignments that move from C string processing to Python data work, then back to C with dynamic memory, and finish with a small Python graphics generator.
 
+Each assignment below lists the language, where it was meant to run, how the program is put together, and how to run it.
 
-# Assignment 1: 
-Introduction to C programming. A C program that receives an ics calendar file and display the events in the format:
+---
 
-{month} {day}, {Year}
+## Assignment 1 — Calendar parser
 
---------------------- (length of dashes must match length of date above)
+**Language:** C (C99)
 
-{start time} to {end time}: {event description} {{Event location}}
+**Build environment:** Linux with `gcc`. This was written for the course Linux lab machines.
 
+Reads an iCalendar (`.ics`) file and prints the events that fall between a start date and an end date, including weekly repeating events.
 
-example:
+The program walks the file line by line, keeps the fields of the current `VEVENT`, expands an `RRULE` into one occurrence per week, and prints each event that sits inside the requested range:
 
+```
 May 19, 2023
-
------------- `
-
+------------
 10:30 AM to 11:30 AM: meeting {{Home}}
+```
 
-11:30 AM to 12:30 PM: lunch {{Starbucks}}
+**Breakdown**
 
-June 01, 2023
+- `A1/event_manager.c` — argument parsing, file reading, date filtering, and formatted output
+- `A1/diana-devops.ics` — sample calendar
 
-------------- `
+**Usage**
 
-11:15 AM to 12:30 PM: Coffee {{Starbucks}}
+```bash
+cd A1
+gcc -Wall -std=c99 event_manager.c -o event_manager
+./event_manager --start=2023/5/1 --end=2023/5/31 --file=diana-devops.ics
+```
 
-End of example
+Dates are `YYYY/M/D`. Output goes to the terminal.
 
-Thoughts: This was my first contact with C. in hindsight using structs and time.h among many other improvements would have made the assignment significantly easier.
+This was a first contact with C. Structs and `time.h` would have made the date handling much simpler.
 
-# Assignment 2: 
-A python script to sort through "top songs" csv files by either "popularity", "danceability" or "energy" from highet to lowest using the PANDAS library. 
+---
 
-arguments are the .csv files, the number of entries to display and the type sorting type
+## Assignment 2 — Song CSV summary (pandas)
 
-ex `./music_manager.py --sortBy=danceability --display=3 --files=top_songs_2010.csv`
+**Language:** Python 3, using pandas and NumPy
 
-would outup:
+**Build environment:** Linux or Windows with Python 3 and pandas installed (`pip install pandas numpy`).
 
-artist,song,year,danceability
+Loads one or more “top songs” CSV files, drops the unused columns, sorts by `popularity`, `danceability`, or `energy`, and writes the top rows to `output.csv`.
 
-Rick Astley,Never Gonna Give You Up,1987,0.924
+**Breakdown**
 
-Darude,Sandstorm,2000,0.922
+- `A2/music_manager.py` — argument parsing, pandas load/sort, and CSV write
+- `A2/top_songs_1999.csv`, `top_songs_2009.csv`, `top_songs_2019.csv` — input data
 
-Beethoven,Ode to Joy,1822,0.88
+**Usage**
 
-Thoughts: We did something similar in lab so this was rather straightforward.
+```bash
+cd A2
+python music_manager.py --sortBy=danceability --display=3 --files=top_songs_2019.csv
+```
 
-# Assignment 3
+Several files can be passed as a comma-separated list:
 
-The same as assignment 2 but programmed in C and utilizing dynamic memory and a given linked list structure to complete the task.
+```bash
+python music_manager.py --sortBy=popularity --display=10 --files=top_songs_1999.csv,top_songs_2009.csv
+```
 
-Program parses through the text in the .csv file records the specified metrics in a linked list node and adds it to a list in order determined by the sortBy parameter.
+The result is `output.csv` in the same directory, with columns `artist,song,year,<sort column>`.
 
-The program then prints the contents of the linked list in the desired format.
+---
 
-Thoughts: Took some of the knowledge from the first assignment and applied it here. Was still not super familiar with C at this point.
+## Assignment 3 — Song CSV summary (C linked list)
 
-# Assignment 4
+**Language:** C (C99)
 
-A python script that draws a series of circles, rectangles and ellipses in random colors and sizes in an .html file
+**Build environment:** Linux with `gcc`. Build with the makefile in `A3`.
 
-Example:
+The same song summary as assignment 2, written in C. Each row is stored in a linked-list node and inserted in sorted order. The program then writes the requested number of top songs to `output.csv`.
 
-![a431](https://github.com/VICMEND/SENG265-Software-Development-Methods/assets/127559762/fc2c2fa4-57f7-4b0a-a82a-d9f1705723be)
+**Breakdown**
 
-Thoughts: Nothing too outstanding or notable about this one, Just coding.
+- `A3/music_manager.c` — argument parsing, CSV reading, and printing
+- `A3/list.c`, `A3/list.h` — ordered linked list
+- `A3/emalloc.c`, `A3/emalloc.h` — malloc wrapper that exits on failure
+- `A3/makefile` — builds the `music_manager` executable
+- `A3/top_songs_*.csv` — input data
 
+**Usage**
+
+```bash
+cd A3
+make
+./music_manager --sortBy=popularity --display=10 --files=top_songs_1999.csv
+```
+
+`--sortBy` is `popularity`, `energy`, or `danceability`. Output is `output.csv`.
+
+```bash
+make clean
+```
+
+This assignment reused the argument style from assignment 1 and added dynamic memory and the supplied list structure.
+
+---
+
+## Assignment 4 — Random SVG art
+
+**Language:** Python 3 (standard library only)
+
+**Build environment:** Linux, macOS, or Windows with Python 3. No extra packages.
+
+Writes HTML files that contain an SVG canvas of randomly colored circles, rectangles, and ellipses. Shape data is stored in named tuples.
+
+**Breakdown**
+
+- `A4/a43.py` — HTML/SVG writer, random shape generator, and named-tuple shape types
+
+**Usage**
+
+```bash
+cd A4
+python a43.py
+```
+
+That creates `a431.html`, `a432.html`, and `a433.html` in the same directory. Open any of them in a browser. Each run draws 1000 shapes on a 500 by 300 canvas, so the files change every time the script runs.

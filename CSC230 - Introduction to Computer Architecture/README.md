@@ -1,77 +1,91 @@
-# CSC230-Intro to computer architecture
-UVIC CSC 230 2024
+# CSC 230 — Introduction to Computer Architecture
 
-The following are projects from CSC 230
+UVIC CSC 230, 2022. Programs for the ATmega2560 (Arduino Mega), first in AVR assembly and then in C. The same work is also split into standalone folders under `Introduction to Computer Architecture`.
 
-# Assignment 1
+**Build environment:** Windows with Microchip Studio (formerly Atmel Studio), targeting an ATmega2560 clocked at 16 MHz. Assembly files include `m2560def.inc`. The C file uses the AVR libc headers (`avr/io.h`, timers, and interrupts).
 
-Assignment was broken into 3 parts to be done using assembly language (AVR). 
+These programs run on the board, or in the Microchip Studio simulator. They are not desktop Linux programs, and this folder has no makefile.
 
-The first was to write an assembly program that identifies the edit distance between two binary numbers.
+Open the `.asm` or `.c` file as the project source, build, and flash the board (or start the simulator). The LCD-shield labs expect the course LCD keypad shield wired to the Mega.
 
-The second was to reset the right-most contiguous sequence of bits in a binary number.
+---
 
-The third was to do the addition of two packed BCDs numbers.
+## Assignment 1 — Bit and BCD operations
 
-------------
-# Assignment 2
-Assignment was to be completed using assembly language (AVR)
+**Language:** AVR assembly
 
-Assignment was broken into 5 tasks:
+Three short programs that work on bytes in registers.
 
-a) Write the function set_leds
+**Breakdown**
 
-b) Write the functions fast_leds and slow_leds
+- `A1/edit-distance.asm` — count how many bits differ between two values
+- `A1/reset-rightmost.asm` — clear the rightmost contiguous run of set bits
+- `A1/bcd-addition.asm` — add two packed-BCD numbers and keep the carry
 
-c) Write the function leds_with_speed
+**Usage**
 
-d) Write the function encode_letter
+Build and debug each file on its own in Microchip Studio. Each one is a standalone program with its inputs in registers, so the result is checked in the simulator’s register view.
 
-e) Write the function display_message
+---
 
-The parameter to set_leds determines which of the Arduino board’s six LEDs to turn on
+## Assignment 2 — LED signalling
 
-fast/slow_leds runs set_leds and determines how long the lights stay on for
+**Language:** AVR assembly
 
-leds_with_speed determines if the fast or slow version will be used based on if the two top-most bits are set or unset
+Spell a word on the board’s six LEDs. Each letter has a stored on/off pattern and a fast or slow timing.
 
-encode_letter decodes letters and their light configuration into the binary value corresponding to the lights in the arduino board. the configuration is stored in memory in the following format
+The program is a set of functions that stack:
 
-.db "A", "..oo..", 1 Where the first item "A" is the letter the second item "..oo.." is the light configuration of that letter (. = light off, o = light on) and the 3rd item is how long it should stay on for (1 for 1s 2 for 0.25s )
+- `set_leds` turns on a subset of the six LEDs from a bit mask
+- `fast_leds` and `slow_leds` hold that pattern for a short or long delay
+- `leds_with_speed` picks the fast or slow delay from the two top bits of the pattern
+- `encode_letter` looks up a character in a table such as `.db "A", "..oo..", 1` (`.` is off, `o` is on, and the number is the speed)
+- `display_message` walks a string such as `WORD07: .db "THE", 0`, encodes each letter, and flashes it
 
-display_message ties it all together by using labels in the format WORD07: .db "THE", 0 and displaying the corresponding message with the light display (in the chosen example the word is "THE")
+**Breakdown**
 
-The flow of the program is that it parses through each character in the word and compares it to the possible configurations in memory. If a comparison is succesful, the program parses through the light configuration in .s and os and transforms it into binary that the program can work with. The program then checks if it's a 1 or 2 and sets the 2 highest bits accordingly. Then displays the light with the correct speed and move onto to the next letter repeating untill the last chracter. 
+- `A2/a2-signalling.asm` — LED helpers, the letter table, and the message display
 
-------------
-# Assignment 3
-Asignment 3 made use of timers and interrupt handlers to display messages onto a 2x16 LCD display using the AVR asemply language
+**Usage**
 
-the message is displayed by pressing the up or down button on the board which cycles through the provided AVAILABLE_CHARSET: .db "0123456789abcdef_", in memory. The left and right buttons were used to move to the next column where another character could be placed.
-on the second row the  first letter of corresponding direction was to be written on the LCD display when the specific button was pressed.
+Build `a2-signalling.asm` for the ATmega2560 and run it on the board or in the simulator. The message string near the bottom of the file is what the LEDs spell.
 
-------------
-# Assignment 4
-A C program divided into 5 parts:
+---
 
-The first part was to create a function Led_State() which turns on lights based on two accepted parameters:
+## Assignment 3 — LCD and buttons
 
-1. The number of an LCD
-   
-2.A number indicating the state to which that LCD must be put (with a zero value meaning “off”, and all other values meaning “on”).
+**Language:** AVR assembly
 
-The second part was to create a function called SOS() which contains the following:
+Sample the LCD-shield buttons with the analog-to-digital converter on a timer, and show the result on the 2x16 character display.
 
-uint8_t light[]: an array of 8-bit values indicate the LED pattern. An array value indicates LEDs on or off by bits set or cleared, with bit 0 the state for LED #0, bit 1 the state for LED #1, etc.
+The up and down buttons cycle a character from `AVAILABLE_CHARSET: .db "0123456789abcdef_"`. Left and right move the cursor to the next column. The second row shows the first letter of the direction that was pressed.
 
-int duration[]: an array of ints (i.e., 16-bit values) representating the duration in milliseconds for an LED pattern.
+**Breakdown**
 
-int length: the number of elements in light[] and the number of elements in duration[].
+- `A3/a3part-D.asm` — ADC button sampling, timer interrupt, and LCD output
 
-The function must then call led_states() using these values to display the message.
+**Usage**
 
-The third part is a function glow() which uses timers to implement a duty cycle for an LED in ordr to simulate brightness.
+Build for the ATmega2560 and run it with the LCD keypad shield attached. Press the shield buttons to move the cursor and change the character.
 
-The fourth part is the function pulse_glow() which is similar to glow() but it uses two interrupt timers to create a varying duty cycle which simulates the light pulsing.
+---
 
-The fifth part is to implement something similar to SOS() but the display is not provided and has to follow a pattern shown by the instructor.
+## Assignment 4 — PWM LED glow
+
+**Language:** C for the AVR ATmega2560 (`F_CPU` is 16 MHz)
+
+Control the board LEDs from hardware timers.
+
+**Breakdown**
+
+`A4/a4.c` contains five parts:
+
+1. `led_state` turns one LED on or off
+2. `sos` plays a stored blink pattern from parallel `light[]` and `duration[]` arrays
+3. `glow` holds an LED at a chosen brightness with pulse-width modulation
+4. `pulse_glow` varies that duty cycle with two timers so the LED fades in and out
+5. A second pattern display, in the same style as `sos`, matching the pattern from the lab
+
+**Usage**
+
+Create an AVR GCC project in Microchip Studio for the ATmega2560, add `a4.c`, build, and flash the board. The `main` function calls the LED routines in sequence.
